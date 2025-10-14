@@ -69,8 +69,5 @@ gbif_data <- read.csv2("gbif-2025-10.csv")
 
 
 
-# make filters to make sure location is within Rio city
-
-
 
          
