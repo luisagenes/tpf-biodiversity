@@ -6,7 +6,7 @@
 # genes.luisa@gmail.com
 # 2025 October
 
-install.packages("rgbif")
+#install.packages("rgbif")
 
 #load packages
 library(rgbif)
@@ -61,6 +61,16 @@ data <- readr::read_tsv(
   show_col_types = FALSE
 )
 
+#save csv file
+#write.csv2(data, "gbif-2025-10.csv")
+
+# visualize data before cleaning
+gbif_data <- read.csv2("gbif-2025-10.csv")
+
+
+
 # make filters to make sure location is within Rio city
+
+
 
          
