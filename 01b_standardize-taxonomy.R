@@ -99,5 +99,9 @@ brflora2 <- brflora2 %>%
 data_std <- data %>%
   left_join(brflora2, by = c("scientificname" = "original.search"))
 
+#delete rows where genus.correct is NA (probably not plants, didn't find a match in Flora do Brasil)
+data_std <- data_std %>%
+  filter(!is.na(genus.correct))
+
 #save file
 #write.csv(data_std, "2025-11-07-corrected_planilha_unificada_coletas_macico_Tijuca_editada.xlsx")
