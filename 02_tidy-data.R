@@ -33,8 +33,14 @@ pnt_keywords <- c(
 mendanha_keywords <- c("Mendanha")
 pedrabranca_keywords <- c("Pedra Branca")
 
-# build a single regex pattern from the keywords, escaping periods etc.
-pnt_pattern <- paste(str_replace_all(pnt_keywords, "\\.", "\\\\."), collapse = "|")
+# regex pattern from the keywords, escaping periods etc
+build_pattern <- function(keywords) {
+  paste(str_replace_all(keywords, "\\.", "\\\\."), collapse = "|")
+}
+
+pnt_pattern         <- build_pattern(pnt_keywords)
+mendanha_pattern    <- build_pattern(mendanha_keywords)
+pedrabranca_pattern <- build_pattern(pedrabranca_keywords)
 
 #create a new column indicating weather individual was registered inside or outside pnt
 gbif <- gbif %>%
