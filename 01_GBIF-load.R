@@ -35,6 +35,7 @@ pred_list <- list(
 #options(gbif_user="", gbif_pwd="", gbif_email="")
 key <- do.call(rgbif::occ_download, c(pred_list, list(format = "SIMPLE_CSV")))
 key 
+
 #### steps for donwloading through R did not work, so I downloaded it directly from gbif portal with this link 
 # https://www.gbif.org/occurrence/download/0001597-251009101135966
 # the link refers to the key that was created based on the predicates

@@ -105,3 +105,5 @@ data_std <- data_std %>%
 
 #save file
 #write.csv(data_std, "2025-11-07-corrected_planilha_unificada_coletas_macico_Tijuca_editada.xlsx")
+
+read.csv("")
