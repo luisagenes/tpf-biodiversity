@@ -63,12 +63,11 @@ data <- readr::read_tsv(
 )
 
 #save csv file
-#write.csv2(data, "gbif-2025-10.csv")
+#write.csv2(data, "data/gbif-2025-10.csv")
 
 # visualize data before cleaning
-gbif_data <- read.csv2("gbif-2025-10.csv")
+gbif_data <- read.csv2("data/gbif-2025-10.csv")
 
-gbif<-read.csv("/Users/luisagenes/Dropbox/_Research/1. PhD/Funding/2025 Meridian/Pesquisa/Meridian-Pesquisa/tpf-biodiversity/gbif-2025-10.csv")
 
 
          
