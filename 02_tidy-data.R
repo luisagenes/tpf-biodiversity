@@ -29,6 +29,10 @@ pnt_keywords <- c(
   "Parque Nacional de Tijuca"
 )
 
+# Mendanha and Pedra Branca
+mendanha_keywords <- c("Mendanha")
+pedrabranca_keywords <- c("Pedra Branca")
+
 # build a single regex pattern from the keywords, escaping periods etc.
 pnt_pattern <- paste(str_replace_all(pnt_keywords, "\\.", "\\\\."), collapse = "|")
 
@@ -47,7 +51,7 @@ gbif <- gbif %>%
 
 
     
-# filters based on geographical location of PNT
+# filters based on geographical location of PNT - will not work now that we included Mendanha and Pedra Branca - needs revision if we decide this step is important
 library(sf)
 library(dplyr)
     
@@ -84,3 +88,6 @@ library(dplyr)
     
     table(gbif$location_status, gbif$inside_park_geo, useNA = "always")
 
+    
+
+    
