@@ -42,19 +42,23 @@ pnt_pattern         <- build_pattern(pnt_keywords)
 mendanha_pattern    <- build_pattern(mendanha_keywords)
 pedrabranca_pattern <- build_pattern(pedrabranca_keywords)
 
-#create a new column indicating weather individual was registered inside or outside pnt
+#create a new column indicating wether individual was registered inside or outside the ucs
 gbif <- gbif %>%
   mutate(
-    location_status = if_else(
-      str_detect(locality, regex(pnt_pattern, ignore_case = TRUE)),
-      "inside_park",
-      "outside_park"
+    location_status = case_when(
+      str_detect(locality, regex(pnt_pattern, ignore_case = TRUE))         ~ "inside_pnt",
+      str_detect(locality, regex(mendanha_pattern, ignore_case = TRUE))    ~ "inside_mendanha",
+      str_detect(locality, regex(pedrabranca_pattern, ignore_case = TRUE)) ~ "inside_pedrabranca",
+      TRUE ~ "outside_ucs"
     )
   )
+
   
 # check summary
-    table(gbif$location_status, useNA = "always")
+table(gbif$location_status, useNA = "always")
 
+#export data
+#write.csv(gbif, "260706_gbif-location.csv")
 
     
 # filters based on geographical location of PNT - will not work now that we included Mendanha and Pedra Branca - needs revision if we decide this step is important
