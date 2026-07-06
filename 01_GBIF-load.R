@@ -32,7 +32,7 @@ pred_list <- list(
 )
 
 # 3- Submit the download 
-options(gbif_user="luisagenes", gbif_pwd="gitsen24!", gbif_email="genes.luisa@gmail.com")
+#options(gbif_user="", gbif_pwd="", gbif_email="")
 key <- do.call(rgbif::occ_download, c(pred_list, list(format = "SIMPLE_CSV")))
 key 
 #### steps for donwloading through R did not work, so I downloaded it directly from gbif portal with this link 
@@ -67,7 +67,7 @@ data <- readr::read_tsv(
 # visualize data before cleaning
 gbif_data <- read.csv2("gbif-2025-10.csv")
 
-
+gbif<-read.csv("/Users/luisagenes/Dropbox/_Research/1. PhD/Funding/2025 Meridian/Pesquisa/Meridian-Pesquisa/tpf-biodiversity/gbif-2025-10.csv")
 
 
          
