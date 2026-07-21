@@ -103,10 +103,10 @@ library(dplyr)
 #### Load additional bird, mammal and plant data ####
 
 #load data
-gbif <- read.csv("260706_gbif-location.csv")
-birds <- read_xlsx("meridian_biodiversidade_aves.xlsx")
-mammals <- read_xlsx("meridian_biodiversidade_mamiferos.xlsx")
-plants <- read_xlsx("meridian_biodiversidade_plantas.xlsx", sheet=2)
+#gbif <- read.csv("260706_gbif-location.csv")
+#birds <- read_xlsx("meridian_biodiversidade_aves.xlsx")
+#mammals <- read_xlsx("meridian_biodiversidade_mamiferos.xlsx")
+#plants <- read_xlsx("meridian_biodiversidade_plantas.xlsx", sheet=2)
 
 #tidy data before joining
 #delete columns that are unnecessary now
