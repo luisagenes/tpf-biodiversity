@@ -254,6 +254,21 @@ birds <- birds %>%
 table(birds$location_status, useNA = "always")
 table(mammals$location_status, useNA = "always")
 
+#include group column
+mammals <- mammals %>%
+  mutate(group = "mammals")
+
+birds <- birds %>%
+  mutate(group = "birds")
+
+gbif <- gbif %>%
+  mutate(
+    group = case_when(
+      class == "Aves"     ~ "birds",
+      class == "Mammalia" ~ "mammals",
+      TRUE ~ NA_character_
+    ))
+
 #### build unique animal dataset 
 combined_animals <- bind_rows(gbif, birds, mammals)
 
@@ -262,8 +277,90 @@ names(combined_animals)
 #save
 #write.csv2(combined_animals, "20260721_combined_animals.csv")
 
+### Tidy plant data
+
+#select columns to keep for now
+
+plants <- plants %>%
+  select(
+    maciço,
+    family,
+    genus,
+    species = scientificname,
+    year = yearcollected,
+    locality,
+    longitude,
+    latitude
+  )
 
 
+### filter locations within PNT (I should have included that in the previous step with mammals and birds)
+
+# keywords for PNT within the locality column
+pnt_keywords <- c(
+  "Floresta da Tijuca",
+  "PN da Tijuca",
+  "Tijuca National Park",
+  "Parque Nacional da Tijuca",
+  "Tijuca National",
+  "P.N. Tijuca",
+  "Parc national de Tijuca",
+  "Parque Nacional de Tijuca"
+)
+
+# Mendanha and Pedra Branca
+mendanha_keywords <- c("Mendanha")
+pedrabranca_keywords <- c("Pedra Branca")
+
+# regex pattern from the keywords, escaping periods etc
+build_pattern <- function(keywords) {
+  paste(str_replace_all(keywords, "\\.", "\\\\."), collapse = "|")
+}
+
+pnt_pattern         <- build_pattern(pnt_keywords)
+mendanha_pattern    <- build_pattern(mendanha_keywords)
+pedrabranca_pattern <- build_pattern(pedrabranca_keywords)
+
+#create a new column indicating wether individual was registered inside or outside the ucs
+plants <- plants %>%
+  mutate(
+    location_status = case_when(
+      str_detect(locality, regex(pnt_pattern, ignore_case = TRUE))         ~ "inside_pnt",
+      str_detect(locality, regex(mendanha_pattern, ignore_case = TRUE))    ~ "inside_mendanha",
+      str_detect(locality, regex(pedrabranca_pattern, ignore_case = TRUE)) ~ "inside_pedrabranca",
+      TRUE ~ "outside_ucs"
+    )
+  )
+
+# check summary
+table(plants$location_status, useNA = "always")
+
+
+#fix potential errors in latlong
+plants <- plants %>%
+  mutate(
+    latitude  = as.numeric(str_replace(latitude, ",", ".")),
+    longitude = as.numeric(str_replace(longitude, ",", "."))
+  )
+
+plants$year <- as.numeric(plants$year)
+
+#include group column
+plants <- plants %>%
+  mutate(group = "plants")
+
+
+#### build unique dataset 
+combined_data <- bind_rows(combined_animals, plants)
+
+names(combined_data)
+
+#remove unnecessary columns
+combined_data <- combined_data %>%
+  select(-inside_park_geo)
+
+#save
+#write.csv2(combined_data, "20260721_combined_data.csv")
 
 
 #delete repeated mammal observations (from inaturalist)
