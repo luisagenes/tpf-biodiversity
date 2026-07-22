@@ -357,7 +357,18 @@ names(combined_data)
 
 #remove unnecessary columns
 combined_data <- combined_data %>%
-  select(-inside_park_geo)
+  select(-inside_park_geo, -location_status_final)
+
+#create summarized column with location inside or outside protected area
+combined_data <- combined_data %>%
+  mutate(
+    within_forest = case_when(
+      location_status %in% c("inside_pnt", "inside_mendanha", "inside_pedrabranca") ~ "inside_forest",
+      location_status == "outside_ucs" ~ "outside_forest",
+      TRUE ~ NA_character_
+    )
+  )
+
 
 #save
 #write.csv2(combined_data, "20260721_combined_data.csv")
