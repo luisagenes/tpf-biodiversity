@@ -371,7 +371,7 @@ combined_data <- combined_data %>%
 
 
 #save
-#write.csv2(combined_data, "20260723_combined_data.csv")
+#write.csv(combined_data, "20260723_combined_data.csv")
 
 
     
