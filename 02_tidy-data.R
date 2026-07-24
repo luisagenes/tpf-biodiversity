@@ -275,7 +275,7 @@ combined_animals <- bind_rows(gbif, birds, mammals)
 names(combined_animals)
 
 #save
-#write.csv2(combined_animals, "20260721_combined_animals.csv")
+#write.csv2(combined_animals, "20260723_combined_animals.csv")
 
 ### Tidy plant data
 
@@ -371,9 +371,7 @@ combined_data <- combined_data %>%
 
 
 #save
-#write.csv2(combined_data, "20260721_combined_data.csv")
+#write.csv2(combined_data, "20260723_combined_data.csv")
 
-
-#delete repeated mammal observations (from inaturalist)
 
     
