@@ -27,12 +27,17 @@ pnt_keywords <- c(
   "Tijuca National",
   "P.N. Tijuca",
   "Parc national de Tijuca",
-  "Parque Nacional de Tijuca"
+  "Parque Nacional de Tijuca",
+  "Morro do Inglês",
+  "Corcovado",
+  "Paineiras",
+  "Três Rios"
 )
 
 # Mendanha and Pedra Branca
 mendanha_keywords <- c("Mendanha")
-pedrabranca_keywords <- c("Pedra Branca")
+pedrabranca_keywords <- c("Pedra Branca",
+                          "Camorim")
 
 # regex pattern from the keywords, escaping periods etc
 build_pattern <- function(keywords) {
