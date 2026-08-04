@@ -31,7 +31,14 @@ pnt_keywords <- c(
   "Morro do Inglês",
   "Corcovado",
   "Paineiras",
-  "Três Rios"
+  "Três Rios",
+  "mata da tijuca",
+  "cristo redentor",
+  "vista chinesa",
+  "mesa do imperador",
+  "estrada das paineiras",
+  "cachoeira das almas",
+  "pico da tijuca"
 )
 
 # Mendanha and Pedra Branca
