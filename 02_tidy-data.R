@@ -579,26 +579,8 @@ combined_data <- combined_data %>%
 table(combined_data$location_status, combined_data$group, useNA = "always")
 table(combined_data$within_forest, useNA = "always")
 
-
-
-
-
-#######################
-## update within_forest column
-combined_data <- combined_data %>%
-  mutate(
-    within_forest = case_when(
-      location_status %in% c(
-        "PARQUE NACIONAL DA TIJUCA",
-        "PARQUE NATURAL MUNICIPAL DA SERRA DO MENDANHA",
-        "PARQUE ESTADUAL DA PEDRA BRANCA"
-      ) ~ "inside_forest",
-      location_status == "outside_ucs" ~ "outside_forest",
-      TRUE ~ "inside_other_uc"
-    )
-  )
-
-table(combined_data$within_forest, useNA = "always")
+#export new data
+#write.csv(combined_data, "20260805_combined_data.csv")
 
 
 
