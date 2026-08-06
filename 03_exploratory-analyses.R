@@ -34,6 +34,10 @@ group_colors <- c(
   "plants"  = "green4"
 )
 
+# set order for plots
+data_unique <- data_unique %>%
+  mutate(group = factor(group, levels = c("plants", "birds", "mammals")))
+
 #barplot
 library(ggplot2)
 
