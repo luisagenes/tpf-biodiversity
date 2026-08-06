@@ -355,3 +355,69 @@ last_record %>%
   arrange(group, last_year) %>%
   print(n = 400)
 
+### Venn diagram after removing singletons/2 records ####
+library(dplyr)
+library(stringr)
+library(ggVennDiagram)
+library(ggplot2)
+library(patchwork)
+
+#filter fauna from the data with species with ≤2 records removed
+data_fauna_unique2 <- data_no_sing2 %>%
+  filter(group %in% c("birds", "mammals")) %>%
+  distinct(species, within_forest, .keep_all = TRUE)
+
+# build species sets per within_forest category, separately for birds and mammals
+build_species_sets <- function(df) {
+  list(
+    inside_forest   = df %>% filter(within_forest == "inside_forest")   %>% pull(species),
+    inside_other_uc = df %>% filter(within_forest == "inside_other_uc") %>% pull(species),
+    outside_forest  = df %>% filter(within_forest == "outside_forest")  %>% pull(species)
+  )
+}
+birds_sets2   <- data_fauna_unique2 %>% filter(group == "birds")   %>% build_species_sets()
+mammals_sets2 <- data_fauna_unique2 %>% filter(group == "mammals") %>% build_species_sets()
+
+# rename the set names for display
+rename_sets <- c(
+  inside_forest   = "forest",
+  inside_other_uc = "other_uc",
+  outside_forest  = "outside"
+)
+names(birds_sets2)   <- rename_sets[names(birds_sets2)]
+names(mammals_sets2) <- rename_sets[names(mammals_sets2)]
+
+# plot
+venn_birds2 <- ggVennDiagram(birds_sets2, set_size = 3) +
+  scale_fill_gradient(low = "white", high = "blue3") +
+  labs(title = "Birds (species with 3+ records)") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = 12))
+
+venn_mammals2 <- ggVennDiagram(mammals_sets2, set_size = 3) +
+  scale_fill_gradient(low = "white", high = "orange2") +
+  labs(title = "Mammals (species with 3+ records)") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = 12))
+
+venn_birds2 + venn_mammals2
+
+###plants venn
+data_plants_unique2 <- data_no_sing2 %>%
+  filter(group == "plants") %>%
+  distinct(species, within_forest, .keep_all = TRUE)
+
+# build species sets per within_forest category for plants
+plants_sets2 <- data_plants_unique2 %>% build_species_sets()
+
+# rename the set names for display
+names(plants_sets2) <- rename_sets[names(plants_sets2)]
+
+# plot
+venn_plants2 <- ggVennDiagram(plants_sets2, set_size = 3) +
+  scale_fill_gradient(low = "white", high = "green4") +
+  labs(title = "Plants (species with 3+ records)") +
+  theme(legend.position = "none",
+        plot.title = element_text(size = 12))
+
+venn_plants2
