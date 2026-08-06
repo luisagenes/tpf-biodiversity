@@ -17,7 +17,7 @@ library(readxl)
 
 
 #load data
-data <- read.csv2("20260805_combined_data.csv")
+data <- read.csv("20260805_combined_data.csv")
 
 #### Number of species inside vs. outside the park ####
 
@@ -26,12 +26,20 @@ library(dplyr)
 data_unique <- data %>%
   distinct(species, within_forest, .keep_all = TRUE)
 
+## set colors for plots
+library(viridis)
+group_colors <- c(
+  "birds"   = "blue3",
+  "mammals" = "orange2",
+  "plants"  = "green4"
+)
 
 #barplot
 library(ggplot2)
 
 ggplot(data_unique, aes(x = within_forest, fill = group)) +
   geom_bar(position = "dodge") +
+  scale_fill_manual(values = group_colors) +
   labs(
     x = "Location",
     y = "Number of species",
