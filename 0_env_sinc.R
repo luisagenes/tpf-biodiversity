@@ -25,7 +25,8 @@ pkgs <- c(
   "bipartite",
   "igraph",
   "tibble",
-  "ggraph"
+  "ggraph",
+  "viridis"
 )
 
 lapply(pkgs, library, character.only = TRUE)
@@ -33,6 +34,7 @@ lapply(pkgs, library, character.only = TRUE)
 # Para adicionar novos pacotes:
 
 renv::install("ggraph")
+renv::install("viridis")
 renv::snapshot() # garante que o novo pacote fique guardado na lockfile e
 # seja instalado sempre que alguem rodar renv::restore
 
