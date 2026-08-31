@@ -28,17 +28,16 @@ pkgs <- c(
   "ggraph",
   "viridis",
   "ggVennDiagram",
-  "patchwork"
+  "patchwork",
+  "iNEXT"
 )
 
 lapply(pkgs, library, character.only = TRUE)
 
 # Para adicionar novos pacotes:
 
-renv::install("ggraph")
-renv::install("viridis")
-renv::install("ggVennDiagram")
-renv::install("patchwork")
+renv::install("iNEXT")
+
 renv::snapshot() # garante que o novo pacote fique guardado na lockfile e
 # seja instalado sempre que alguem rodar renv::restore
 

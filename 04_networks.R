@@ -4,8 +4,20 @@
 # DADOS
 # ============================================================
 
-comunidades <- read.csv2("data/20260723_combined_data.csv")
+comunidades <- read.csv("data/20260805_combined_data.csv")
 str(comunidades)
+
+comunidades <- comunidades %>%
+  mutate(
+    location_status_final = case_when(
+      location_status == "PARQUE NACIONAL DA TIJUCA" ~ "inside_park",
+      location_status == "PARQUE NATURAL MUNICIPAL DA SERRA DO MENDANHA" ~ "inside_park",
+      location_status == "PARQUE ESTADUAL DA PEDRA BRANCA" ~ "inside_park",
+      TRUE ~ "outside_park"
+    )
+  )
+
+table(comunidades$location_status, comunidades$location_status_final, useNA = "ifany")
 
 at_frug <- read.csv2("data/ATLANTIC_frugivory.csv", fileEncoding = "Latin1",
                      stringsAsFactors = FALSE)
@@ -22,6 +34,16 @@ head(elton)
 # ============================================================
 # LIMPANDO
 # ============================================================
+
+sites <- list(
+  outside_ucs        = "outside_ucs",
+  inside_ucs         = c("PARQUE NATURAL MUNICIPAL DA SERRA DO MENDANHA",
+                         "PARQUE ESTADUAL DA PEDRA BRANCA",
+                         "PARQUE NACIONAL DA TIJUCA"),
+  inside_mendanha    = "PARQUE NATURAL MUNICIPAL DA SERRA DO MENDANHA",
+  inside_pedrabranca = "PARQUE ESTADUAL DA PEDRA BRANCA",
+  inside_pnt         = "PARQUE NACIONAL DA TIJUCA"
+)
 
 ## --- Comunidades: padronizar nomes de espécie ---
 
@@ -60,10 +82,20 @@ de_para_plantas_com <- flora_com %>%
   distinct(species_original, .keep_all = TRUE)
 
 de_para_com <- bind_rows(de_para_animais_com, de_para_plantas_com)
+
 comunidades <- comunidades %>%
   left_join(de_para_com, by = c("species" = "species_original")) %>%
   mutate(genero_padronizado = word(species_padronizado, 1))
 # ^ gênero padronizado = primeira palavra do nome de espécie já padronizado
+
+familias_marinhas <- c("Otariidae", "Phocidae", "Delphinidae", "Fregatidae", "Sulidae", "Laridae", "Stercorariidae")
+ordens_excluir_direto <- c("Cetacea", "Sphenisciformes", "Procellariiformes")
+spp_sem_reficofa <- c("Fregata magnificens", "Larus dominicanus")
+
+comunidades <- comunidades %>%
+  filter(!order %in% ordens_excluir_direto,
+         !family %in% familias_marinhas,
+         !species %in% spp_sem_reficofa)
 
 ### Atlantic frugivory:
 
@@ -146,7 +178,7 @@ frug_sp_atfrug  <- unique(at_frug$Frugivore_Species_padronizado) %>% na.omit()
 plant_sp_atfrug <- unique(at_frug$Plant_Species_padronizado) %>% na.omit()
 
 n_match_frug  <- length(intersect(frug_sp_comunidades, frug_sp_atfrug)) # 223
-n_match_plant <- length(intersect(plant_sp_comunidades, plant_sp_atfrug)) # 377
+n_match_plant <- length(intersect(plant_sp_comunidades, plant_sp_atfrug)) # 392
 
 n_match_frug  / length(frug_sp_comunidades) # 0.31 (era 0.28 antes de padronizar)
 n_match_plant / length(plant_sp_comunidades) # 0.12 (era 0.08 antes de padronizar)
@@ -167,36 +199,23 @@ genus_frug_atfrug  <- unique(at_frug$Frug_Genus_padronizado) %>% na.omit()
 genus_plant_atfrug <- unique(at_frug$Plant_genus_padronizado) %>% na.omit()
 
 n_match_genus_frug  <- length(intersect(genus_frug_comunidades, genus_frug_atfrug)) # 160
-n_match_genus_plant <- length(intersect(genus_plant_comunidades, genus_plant_atfrug)) # 235
+n_match_genus_plant <- length(intersect(genus_plant_comunidades, genus_plant_atfrug)) # 241
 
 n_match_genus_frug  / length(genus_frug_comunidades) # 0.34
 n_match_genus_plant / length(genus_plant_comunidades)# 0.21
-
-animais_so_dentro <- setdiff(animais_dentro, animais_fora)
-animais_so_fora   <- setdiff(animais_fora, animais_dentro)
-
-plantas_so_dentro <- setdiff(plantas_dentro, plantas_fora)
-plantas_so_fora   <- setdiff(plantas_fora, plantas_dentro)
-
-tibble(
-  categoria = c("animais_so_dentro", "animais_so_fora", "plantas_so_dentro", "plantas_so_fora"),
-  n = c(length(animais_so_dentro), length(animais_so_fora),
-        length(plantas_so_dentro), length(plantas_so_fora))
-)
-
-sort(animais_so_dentro)
-sort(animais_so_fora)
-sort(plantas_so_dentro)
-sort(plantas_so_fora)
 
 # ============================================================
 # ATRIBUTOS -- massa corporal (AVONET + EltonTraits + at_frug)
 # ============================================================
 
 ## --- AVONET (aves) ---
-avonet_ref <- at_frug %>%
-  distinct(Frugivore_Species_padronizado) %>%
-  filter(!is.na(Frugivore_Species_padronizado)) %>%
+
+especies_aves_comunidade <- comunidades %>%
+  filter(class == "Aves", !is.na(species_padronizado)) %>%
+  distinct(species_padronizado) %>%
+  pull(species_padronizado)
+
+avonet_ref <- tibble(Frugivore_Species_padronizado = especies_aves_comunidade) %>%
   left_join(avonet1 %>% select(Species1, Beak.Width, Mass),
             by = c("Frugivore_Species_padronizado" = "Species1")) %>%
   left_join(avonet3 %>% select(Species3, Beak.Width3 = Beak.Width, Mass3 = Mass),
@@ -224,7 +243,7 @@ avonet_extra <- sinonimos_avonet %>%
   select(Frugivore_Species_padronizado, Beak.Width, Mass)
 
 avonet_ref <- avonet_ref %>%
-  rows_update(avonet_extra, by = "Frugivore_Species_padronizado")
+  rows_update(avonet_extra, by = "Frugivore_Species_padronizado", unmatched = "ignore")
 
 ## --- EltonTraits (mamíferos) ---
 elton_ref <- elton %>%
@@ -232,8 +251,6 @@ elton_ref <- elton %>%
   distinct(Scientific_padronizado, .keep_all = TRUE) %>%
   select(Scientific_padronizado, BodyMass.Value, Diet.Fruit)
 
-## --- Checagem pendente: Frug_Body_Mass de mamífero tem o mesmo
-##     bug de ponto-milhar que já vimos em ave? ---
 n_pontos <- function(x) lengths(regmatches(x, gregexpr("\\.", x)))
 
 at_frug %>%
@@ -272,16 +289,26 @@ massa_por_site <- map_dfr(sites, function(locs) {
   comunidades %>%
     filter(location_status %in% locs, group %in% c("birds", "mammals"),
            !is.na(species_padronizado)) %>%
+    mutate(class = if_else(group == "birds", "Aves", "Mammalia")) %>%
     distinct(species_padronizado, class) %>%
     left_join(massa_ref, by = "species_padronizado")
 }, .id = "site")
 
-ggplot(massa_por_site, aes(x = site, y = Mass)) +
-  geom_boxplot(outlier.alpha = 0.3) +
-  geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+massa_por_site %>%
+  filter(is.na(Mass)) %>%
+  distinct(species_padronizado, class) %>%
+  arrange(class, species_padronizado)
+
+ggplot(massa_por_site, aes(x = site, y = Mass, fill = class)) +
+  geom_boxplot(outlier.shape = NA, position = position_dodge(width = 0.8)) +
+  geom_jitter(aes(color = class), position = position_jitterdodge(dodge.width = 0.8, jitter.width = 0.15),
+              alpha = 0.3, size = 1) +
+  scale_fill_manual(values = c("Aves" = "#4a90d9", "Mammalia" = "#e8792f")) +
+  scale_color_manual(values = c("Aves" = "#4a90d9", "Mammalia" = "#e8792f")) +
   scale_y_log10() +
   labs(x = NULL, y = "Massa corporal (g, escala log)",
-       title = "Distribuição de massa corporal dos frugívoros por comunidade") +
+       title = "Distribuição de massa corporal dos animais por comunidade",
+       fill = "Classe", color = "Classe") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 40, hjust = 1))
 
@@ -317,22 +344,23 @@ traits_por_site <- map_dfr(sites, function(locs) {
     left_join(traits_fruto_semente, by = c("genero_padronizado" = "Plant_genus_padronizado"))
 }, .id = "site")
 
-## --- Plot: fruto e semente lado a lado, cada um com diâmetro e comprimento ---
-traits_por_site %>%
+traits_long <- traits_por_site %>%
   select(site, fruit_diameter_medio, fruit_length_medio,
          seed_diameter_medio, seed_length_medio) %>%
   pivot_longer(-site, names_to = "medida", values_to = "valor") %>%
-  filter(!is.na(valor)) %>%
+  filter(!is.na(valor), site != "inside_ucs") %>%
   mutate(
     parte = if_else(str_starts(medida, "fruit"), "Fruto", "Semente"),
     dimensao = if_else(str_detect(medida, "diameter"), "Diâmetro (mm)", "Comprimento (mm)")
-  ) %>%
+  )
+
+traits_long %>%
+  filter(parte == "Fruto") %>%
   ggplot(aes(x = site, y = valor)) +
-  geom_boxplot(outlier.alpha = 0.3) +
+  geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
-  facet_grid(dimensao ~ parte, scales = "free_y") +
-  labs(x = NULL, y = NULL,
-       title = "Tamanho de fruto e semente por comunidade") +
+  facet_wrap(~dimensao, scales = "free_y") +
+  labs(x = NULL, y = NULL, title = "Tamanho de fruto por comunidade") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 40, hjust = 1))
 
@@ -349,14 +377,15 @@ traits_fruto_semente_especie <- at_frug %>%
     seed_length_medio    = mean(seed_length, na.rm = TRUE),
     .groups = "drop"
   )
-
-## --- Juntar com presença por comunidade (species_padronizado, não genero) ---
-traits_por_site_especie <- map_dfr(sites, function(locs) {
-  comunidades %>%
-    filter(location_status %in% locs, group == "plants", !is.na(species_padronizado)) %>%
-    distinct(species_padronizado) %>%
-    left_join(traits_fruto_semente_especie, by = c("species_padronizado" = "Plant_Species_padronizado"))
-}, .id = "site")
+traits_long %>%
+  filter(parte == "Semente") %>%
+  ggplot(aes(x = site, y = valor)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+  facet_wrap(~dimensao, scales = "free_y") +
+  labs(x = NULL, y = NULL, title = "Tamanho de semente por comunidade") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 40, hjust = 1))
 
 ## --- Conferir N antes de plotar -- essencial dado o match baixo esperado ---
 traits_por_site_especie %>%
@@ -367,25 +396,37 @@ traits_por_site_especie %>%
     n_com_semente = sum(!is.na(seed_diameter_medio))
   )
 
-## --- Plot ---
-traits_por_site_especie %>%
+traits_long_especie <- traits_por_site_especie %>%
   select(site, fruit_diameter_medio, fruit_length_medio,
          seed_diameter_medio, seed_length_medio) %>%
   pivot_longer(-site, names_to = "medida", values_to = "valor") %>%
-  filter(!is.na(valor)) %>%
+  filter(!is.na(valor), site != "inside_ucs") %>%
   mutate(
     parte = if_else(str_starts(medida, "fruit"), "Fruto", "Semente"),
     dimensao = if_else(str_detect(medida, "diameter"), "Diâmetro (mm)", "Comprimento (mm)")
-  ) %>%
+  )
+
+# Fruto
+traits_long_especie %>%
+  filter(parte == "Fruto") %>%
   ggplot(aes(x = site, y = valor)) +
-  geom_boxplot(outlier.alpha = 0.3) +
+  geom_boxplot(outlier.shape = NA) +
   geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
-  facet_grid(dimensao ~ parte, scales = "free_y") +
-  labs(x = NULL, y = NULL,
-       title = "Tamanho de fruto e semente por comunidade (nível espécie)") +
+  facet_wrap(~dimensao, scales = "free_y") +
+  labs(x = NULL, y = NULL, title = "Tamanho de fruto por comunidade (nível espécie)") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 40, hjust = 1))
 
+# Semente
+traits_long_especie %>%
+  filter(parte == "Semente") %>%
+  ggplot(aes(x = site, y = valor)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.3, size = 1) +
+  facet_wrap(~dimensao, scales = "free_y") +
+  labs(x = NULL, y = NULL, title = "Tamanho de semente por comunidade (nível espécie)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 40, hjust = 1))
 # ============================================================
 # REDES
 # ============================================================
@@ -401,15 +442,6 @@ interacoes_genero <- at_frug %>%
 interacoes_mista <- at_frug %>% 
   filter(!is.na(Frugivore_Species_padronizado), !is.na(Plant_genus_padronizado)) %>%
   distinct(Frugivore_Species_padronizado, Plant_genus_padronizado)
-
-sites <- list(
-  outside_ucs        = "outside_ucs",
-  inside_ucs         = c("inside_mendanha", "inside_pedrabranca", "inside_pnt"),
-  inside_mendanha    = "inside_mendanha",
-  inside_pedrabranca = "inside_pedrabranca",
-  inside_pnt         = "inside_pnt"
-)
-
 
 ### Funcao para pegar quem está presente no site e filtrar a 
 #     listra mestra por co-ocorrencia
@@ -575,12 +607,12 @@ metricas_plot %>%
   theme(axis.text.x = element_text(angle = 40, hjust = 1))
 
 curvas_extincao <- imap_dfr(matrizes, function(m, nome) {
-  ext <- second.extinct(m, participant = "higher", method = "degree")
-  n_plantas_total <- nrow(m)  # total de espécies de planta ANTES de qualquer extinção
+  ext <- second.extinct(m, participant = "lower", method = "degree")
+  n_plantas_total <- ncol(m)  # colunas = plantas na sua construção de matriz
   tibble(
     rede = nome,
     prop_frug_removidos = ext[, "no"] / max(ext[, "no"]),
-    prop_plant_sobrevivendo = 1 - cumsum(ext[, "ext.lower"]) / n_plantas_total
+    prop_plant_sobrevivendo = 1 - cumsum(ext[, "ext.higher"]) / n_plantas_total
   )
 })
 
@@ -612,6 +644,23 @@ animais_fora   <- unique(redes_mista$mista_outside_ucs$Frugivore_Species_padroni
 
 plantas_dentro <- unique(redes_mista$mista_inside_ucs$Plant_genus_padronizado)
 plantas_fora   <- unique(redes_mista$mista_outside_ucs$Plant_genus_padronizado)
+
+animais_so_dentro <- setdiff(animais_dentro, animais_fora)
+animais_so_fora   <- setdiff(animais_fora, animais_dentro)
+
+plantas_so_dentro <- setdiff(plantas_dentro, plantas_fora)
+plantas_so_fora   <- setdiff(plantas_fora, plantas_dentro)
+
+tibble(
+  categoria = c("animais_so_dentro", "animais_so_fora", "plantas_so_dentro", "plantas_so_fora"),
+  n = c(length(animais_so_dentro), length(animais_so_fora),
+        length(plantas_so_dentro), length(plantas_so_fora))
+)
+
+sort(animais_so_dentro)
+sort(animais_so_fora)
+sort(plantas_so_dentro)
+sort(plantas_so_fora)
 
 classificar <- function(nome, so_dentro, so_fora) {
   case_when(
